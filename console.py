@@ -13,6 +13,7 @@ from models.amenity import Amenity
 from models.review import Review
 from shlex import split
 import copy
+import models
 
 
 class HBNBCommand(cmd.Cmd):
@@ -44,50 +45,41 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def do_create(self, args):
-        """ Create an object of any class"""
-        try:
-            if not args:
-                raise SyntaxError()
-            my_list = args.split(" ")
-
-            kwargs = {}
-            for i in range(1, len(my_list)):
-                key, value = tuple(my_list[i].split("="))
-                if value[0] == '"':
-                    value = value.strip('"').replace("_", " ")
+    def _key_value_parser(self, args):
+        """creates a dictionary from a list of strings"""
+        new_dict = {}
+        for arg in args:
+            if "=" in arg:
+                kvp = arg.split('=', 1)
+                key = kvp[0]
+                value = kvp[1]
+                if value[0] == value[-1] == '"':
+                    value = split(value)[0].replace('_', ' ')
                 else:
                     try:
-                        value = eval(value)
-                    except (SyntaxError, NameError):
-                        continue
-                kwargs[key] = value
+                        value = int(value)
+                    except:
+                        try:
+                            value = float(value)
+                        except:
+                            continue
+                new_dict[key] = value
+        return new_dict
 
-            if kwargs == {}:
-                obj = eval(my_list[0])()
-            else:
-                obj = eval(my_list[0])(**kwargs)
-                storage.new(obj)
-            print(obj.id)
-            obj.save()
-        except SyntaxError:
+    def do_create(self, arg):
+        """Creates a new instance of a class"""
+        args = arg.split()
+        if len(args) == 0:
             print("** class name missing **")
-        except NameError:
+            return False
+        if args[0] in HBNBCommand.classes:
+            new_dict = self._key_value_parser(args[1:])
+            instance = HBNBCommand.classes[args[0]](**new_dict)
+        else:
             print("** class doesn't exist **")
-
-        """args = args.split()
-        if not args[0]:
-            print("** class name missing **")
-            return
-        elif args[0] not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        # creating a dict from args
-        new_dict = self._create_dict_instance(args[1:])
-        # sending args on form of kwargs
-        new_instance = HBNBCommand.classes[args[0]](**new_dict)
-        print(new_instance.id)
-        new_instance.save()"""
+            return False
+        print(instance.id)
+        instance.save()
 
     def do_count(self, args):
         """Count current number of class instances"""
@@ -238,12 +230,12 @@ class HBNBCommand(cmd.Cmd):
 
     def do_all(self, arg):
         """Prints string representations of instances"""
-        args = arg.split()
+        args = split(arg)
         obj_list = []
         if len(args) == 0:
             obj_dict = storage.all()
         elif args[0] in self.classes:
-            obj_dict = storage.all(self.classes[args[0]])
+            obj_dict = models.storage.all(self.classes[args[0]])
         else:
             print("** class doesn't exist **")
             return False
