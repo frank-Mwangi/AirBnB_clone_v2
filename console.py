@@ -4,12 +4,15 @@ import cmd
 import sys
 from models.base_model import BaseModel
 from models.__init__ import storage
+from datetime import datetime
 from models.user import User
 from models.place import Place
 from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+from shlex import split
+import copy
 
 
 class HBNBCommand(cmd.Cmd):
@@ -41,35 +44,38 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def _create_dict_instance(self, line):
-        """
-            Parse input and convert it to
-            Dict for do_create
-        """
-        new_dict = {}
-        for item in line:
-            if "=" in item:
-                # creating list from value and key
-                # if "=" found
-                new_arg = item.split("=", 1)
-                key = new_arg[0]
-                value = new_arg[1]
-                if value[0] == '"' == value[-1]:
-                    value = value.replace('"', "").replace("_", " ")
-                else:
-                    try:
-                        value = int(value)
-                    except Exception:
-                        try:
-                            value = float(value)
-                        except Exception:
-                            continue
-                new_dict[key] = value
-        return new_dict
-
     def do_create(self, args):
         """ Create an object of any class"""
-        args = args.split()
+        try:
+            if not args:
+                raise SyntaxError()
+            my_list = args.split(" ")
+
+            kwargs = {}
+            for i in range(1, len(my_list)):
+                key, value = tuple(my_list[i].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
+                else:
+                    try:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
+                        continue
+                kwargs[key] = value
+
+            if kwargs == {}:
+                obj = eval(my_list[0])()
+            else:
+                obj = eval(my_list[0])(**kwargs)
+                storage.new(obj)
+            print(obj.id)
+            obj.save()
+        except SyntaxError:
+            print("** class name missing **")
+        except NameError:
+            print("** class doesn't exist **")
+
+        """args = args.split()
         if not args[0]:
             print("** class name missing **")
             return
@@ -81,7 +87,7 @@ class HBNBCommand(cmd.Cmd):
         # sending args on form of kwargs
         new_instance = HBNBCommand.classes[args[0]](**new_dict)
         print(new_instance.id)
-        new_instance.save()
+        new_instance.save()"""
 
     def do_count(self, args):
         """Count current number of class instances"""
