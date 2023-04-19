@@ -13,7 +13,7 @@ import uuid
 
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
-if models.storage == "db":
+if models.store == "db":
     Base = declarative_base()
 else:
     Base = object
@@ -21,10 +21,10 @@ else:
 
 class BaseModel:
     """The BaseModel class from which future classes will be derived"""
-    if models.storage == "db":
+    if models.store == "db":
         id = Column(String(60), primary_key=True)
-        created_at = Column(DateTime, default=datetime.utcnow)
-        updated_at = Column(DateTime, default=datetime.utcnow)
+        created_at = Column(DateTime, default=datetime.utcnow())
+        updated_at = Column(DateTime, default=datetime.utcnow())
 
     def __init__(self, *args, **kwargs):
         """Initialization of the base model"""
@@ -55,8 +55,8 @@ class BaseModel:
     def save(self):
         """updates the attribute 'updated_at' with the current datetime"""
         self.updated_at = datetime.utcnow()
-        models.storage.new(self)
-        models.storage.save()
+        models.store.new(self)
+        models.store.save()
 
     def to_dict(self):
         """returns a dictionary containing all keys/values of the instance"""
@@ -72,4 +72,4 @@ class BaseModel:
 
     def delete(self):
         """delete the current instance from the storage"""
-        models.storage.delete(self)
+        models.store.delete(self)
