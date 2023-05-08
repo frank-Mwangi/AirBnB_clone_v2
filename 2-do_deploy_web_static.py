@@ -6,7 +6,7 @@ from datetime import datetime
 from os import path
 
 
-env.hosts = ['18.209.20.255', '34.73.76.135']
+env.hosts = ['100.25.103.66', '100.25.215.1']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/id_rsa'
 
@@ -21,7 +21,7 @@ def do_deploy(archive_path):
                 # upload archive
                 put(archive_path, '/tmp/')
 
-                # create target dir
+                # create target directory
                 timestamp = archive_path[-18:-4]
                 run('sudo mkdir -p /data/web_static/\
 releases/web_static_{}/'.format(timestamp))
@@ -46,7 +46,7 @@ web_static_{}/web_static'
                 # delete pre-existing sym link
                 run('sudo rm -rf /data/web_static/current')
 
-                # re-establish symbolic link
+                # recreate symbolic link
                 run('sudo ln -s /data/web_static/releases/\
 web_static_{}/ /data/web_static/current'.format(timestamp))
         except:
